@@ -14,33 +14,37 @@ def encrypt(fileName, outputFile, password, bufferSize):
     pyAesCrypt.encryptFile(fileName, outputFile, password, bufferSize)
     return outputFile
 
+
 def decrypt(fileName, outputFile, password, bufferSize):
     # decrypt
     pyAesCrypt.decryptFile(fileName, outputFile, password, bufferSize)
     return outputFile
 
+"""Validates file names and prompts for password """
 def checkArguments(inputFile, newFile):
-    isFile(inputFile)
-    alreadyExists(newFile)
+    checkFile(inputFile, True)
+    checkFile(newFile, False)
     try:
         return getpass.getpass()
     except Exception as error:
         print('ERROR', error)
 
-def isFile(fileName):
-    if not os.path.isfile(fileName):
-        print("\"{0}\" can't be found or isn't a file!".format(fileName))
-        exit(0)
+        
+"""Takes file names and checks if they can be used correctly """
+def checkFile(fileName, bol):
+    if bol:
+        if not os.path.isfile(fileName):
+                print("\"{0}\" can't be found or isn't a file!".format(fileName))
+                exit(0)
+    else:
+        if os.path.isfile(fileName):
+                 print("\"{0}\" already exists.".format(fileName))
+                 if input("Do you want to replace the existing file? yes/no: ").lower().startswith("y"):
+                    return
+                 exit(0)
 
-
-def alreadyExists(fileName):
-    if os.path.isfile(fileName):
-        print("\"{0}\" already exists.".format(fileName))
-        if input("Do you want to replace the existing file? yes/no: ").lower().startswith("y"):
-            return
-        exit(0)
-
-
+    
+"""Takes arguments and validates them. Returns checked arguments"""
 def passArguments(crypt):
     inputFile, outputFile = crypt
     password = checkArguments(inputFile, outputFile)
@@ -49,7 +53,7 @@ def passArguments(crypt):
 
 def main():
 # Parse arguments
-    parser = argparse.ArgumentParser(description="Encrypt file with AES CBC")
+    parser = argparse.ArgumentParser(description="Encrypt file with AES-256-CBC")
     parser.add_argument('-e', '--encrypt', action="store", nargs=2, help="Name or absolute Path of file to encrypt and output file")
     parser.add_argument('-d', '--decrypt', action="store", nargs=2, help="Name or absolute Path of file to decrypt and output file")
     args = parser.parse_args()
