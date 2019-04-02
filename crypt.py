@@ -9,64 +9,64 @@ import sys
 import argparse
 
 
-
-def cryptHelper(fileName, do):
-        while True:
-            newFile = input("Name or absolute Path for {0}ed file: ".format(do))
-            if not os.path.isfile(newFile):
-                return newFile
-            else:
-                print("Name exists. Please enter a new name")
-
-
-def encrypt(fileName, password, bufferSize):
+def encrypt(fileName, outputFile, password, bufferSize):
     # encrypt
+    pyAesCrypt.encryptFile(fileName, outputFile, password, bufferSize)
+    return outputFile
 
-    newFile = cryptHelper(fileName, "encrypt")
-    pyAesCrypt.encryptFile(fileName, newFile, password, bufferSize)
-    return newFile
-
-
-def decrypt(fileName, password, bufferSize):
-
+def decrypt(fileName, outputFile, password, bufferSize):
     # decrypt
-    newFile = cryptHelper(fileName, "decrypt")
-    pyAesCrypt.decryptFile(fileName, newFile, password, bufferSize)
-    return newFile
+    pyAesCrypt.decryptFile(fileName, outputFile, password, bufferSize)
+    return outputFile
 
-def checkArgument(fileName):
+def checkArguments(inputFile, newFile):
+    isFile(inputFile)
+    alreadyExists(newFile)
+    try:
+        return getpass.getpass()
+    except Exception as error:
+        print('ERROR', error)
+
+def isFile(fileName):
     if not os.path.isfile(fileName):
-        print("No valid file selected!")
+        print("\"{0}\" can't be found or isn't a file!".format(fileName))
         exit(0)
-    else:
-        try:
-            return getpass.getpass()
-        except Exception as error:
-            print('ERROR', error)
+
+
+def alreadyExists(fileName):
+    if os.path.isfile(fileName):
+        print("\"{0}\" already exists.".format(fileName))
+        if input("Do you want to replace the existing file? yes/no: ").lower().startswith("y"):
+            return
+        exit(0)
+
+
 
 
 def main():
 # Parse arguments
     parser = argparse.ArgumentParser(description="Encrypt file with AES CBC")
-    parser.add_argument('-e', '--encrypt', action="store", help="Name or absolute Path of file to encrypt")
-    parser.add_argument('-d', '--decrypt', action="store", help="Name or absolute Path of file to decrypt")
+    parser.add_argument('-e', '--encrypt', action="store", nargs=2, help="Name or absolute Path of file to encrypt and output file")
+    parser.add_argument('-d', '--decrypt', action="store", nargs=2, help="Name or absolute Path of file to decrypt and output file")
     args = parser.parse_args()
     # Check argument
     if not len(sys.argv) > 1:
-        print("You have to pass an argument.")
-        return
+        print("You have to pass an argument. Insert -h for more information.")
+        sys.exit(0)
     # encryption/decryption buffer size - 64K
     bufferSize = 64 * 1024
     try:
         if args.encrypt:
-            password = checkArgument(args.encrypt)
-            newFile = encrypt(args.encrypt, password, bufferSize)
+            fileToEncrypt, outputFile = args.encrypt
+            password = checkArguments(fileToEncrypt, outputFile)
+            newFile = encrypt(fileToEncrypt, outputFile, password, bufferSize)
         if args.decrypt:
-            password = checkArgument(args.decrypt)
-            newFile = decrypt(args.decrypt, password, bufferSize)
+            fileToDecrypt, outputFile = args.decrypt
+            password = checkArguments(fileToDecrypt, outputFile)
+            newFile = decrypt(fileToDecrypt, outputFile, password, bufferSize)
     except ValueError as error:
         print(error)
-        sys.exit()
+        sys.exit(0)
     print("{} created!".format(newFile))
     sys.exit(0)
 
