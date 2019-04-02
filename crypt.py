@@ -41,6 +41,10 @@ def alreadyExists(fileName):
         exit(0)
 
 
+def passArguments(crypt):
+    inputFile, outputFile = crypt
+    password = checkArguments(inputFile, outputFile)
+    return inputFile, outputFile, password
 
 
 def main():
@@ -57,12 +61,10 @@ def main():
     bufferSize = 64 * 1024
     try:
         if args.encrypt:
-            fileToEncrypt, outputFile = args.encrypt
-            password = checkArguments(fileToEncrypt, outputFile)
+            fileToEncrypt, outputFile, password = passArguments(args.encrypt)
             newFile = encrypt(fileToEncrypt, outputFile, password, bufferSize)
         if args.decrypt:
-            fileToDecrypt, outputFile = args.decrypt
-            password = checkArguments(fileToDecrypt, outputFile)
+            fileToDecrypt, outputFile, password = passArguments(args.decrypt)
             newFile = decrypt(fileToDecrypt, outputFile, password, bufferSize)
     except ValueError as error:
         print(error)
