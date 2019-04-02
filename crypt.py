@@ -9,17 +9,6 @@ import sys
 import argparse
 
 
-def encrypt(fileName, outputFile, password, bufferSize):
-    # encrypt
-    pyAesCrypt.encryptFile(fileName, outputFile, password, bufferSize)
-    return outputFile
-
-
-def decrypt(fileName, outputFile, password, bufferSize):
-    # decrypt
-    pyAesCrypt.decryptFile(fileName, outputFile, password, bufferSize)
-    return outputFile
-
 """Validates file names and prompts for password """
 def checkArguments(inputFile, newFile):
     checkFile(inputFile, True)
@@ -29,7 +18,7 @@ def checkArguments(inputFile, newFile):
     except Exception as error:
         print('ERROR', error)
 
-        
+
 """Takes file names and checks if they can be used correctly """
 def checkFile(fileName, bol):
     if bol:
@@ -43,7 +32,7 @@ def checkFile(fileName, bol):
                     return
                  exit(0)
 
-    
+
 """Takes arguments and validates them. Returns checked arguments"""
 def passArguments(crypt):
     inputFile, outputFile = crypt
@@ -66,14 +55,16 @@ def main():
     try:
         if args.encrypt:
             fileToEncrypt, outputFile, password = passArguments(args.encrypt)
-            newFile = encrypt(fileToEncrypt, outputFile, password, bufferSize)
+            # encrypt
+            pyAesCrypt.encryptFile(fileToEncrypt, outputFile, password, bufferSize)
         if args.decrypt:
             fileToDecrypt, outputFile, password = passArguments(args.decrypt)
-            newFile = decrypt(fileToDecrypt, outputFile, password, bufferSize)
+            # decrypt
+            pyAesCrypt.decryptFile(fileToDecrypt, outputFile, password, bufferSize)
     except ValueError as error:
         print(error)
         sys.exit(0)
-    print("{} created!".format(newFile))
+    print("{} created!".format(outputFile))
     sys.exit(0)
 
 if __name__ == "__main__":
