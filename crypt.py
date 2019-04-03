@@ -16,6 +16,7 @@ def checkArguments(inputFile, newFile):
     except Exception as error:
         print('ERROR', error)
 
+"""Returns a sha256 hash of the secret"""
 def getKey(password):
         hasher = SHA256.new(password.encode())
         return hasher.digest()
@@ -40,6 +41,7 @@ def passArguments(crypt):
     password = checkArguments(inputFile, outputFile)
     return inputFile, outputFile, password
 
+"""Encrypts a given file and returns the result in a new file"""
 def encrypt(key, filetoEncrypt, outputFile, bufferSize):
     filesize = str(os.path.getsize(filetoEncrypt)).zfill(16)
     IV = os.urandom(16)
@@ -59,6 +61,7 @@ def encrypt(key, filetoEncrypt, outputFile, bufferSize):
                     chunk += str.encode(" "*(16-(len(chunk) % 16)))
                 outfile.write(encryptor.encrypt(chunk))
 
+"""Decrypts a given file and returns the results in a new file"""
 def decrypt(key, filetoDecrypt, outputFile, bufferSize):
     with open(filetoDecrypt, "rb") as infile:
         filesize = int(infile.read(16))
@@ -88,25 +91,27 @@ def main():
     # make initialization vector
     try:
         if args.encrypt:
+            # CheckArguments
             fileToEncrypt, outputFile, password = passArguments(args.encrypt)
+            # Hash the secret
             key = getKey(password)
             # encrypt
             encrypt(key, fileToEncrypt, outputFile, bufferSize)
         if args.decrypt:
+            # CheckArguments
             fileToDecrypt, outputFile, password = passArguments(args.decrypt)
+            # Hash the secret
             key = getKey(password)
             # decrypt
             decrypt(key, fileToDecrypt, outputFile, bufferSize)
     except ValueError as error:
         print(error)
         sys.exit(0)
+    except KeyboardInterrupt:
+        print('\nInterrupted by a humand...')
+        sys.exit(0)
     print("{} created!".format(outputFile))
     sys.exit(0)
 
 if __name__ == "__main__":
-    while True:
-        try:
-            main()
-        except KeyboardInterrupt:
-            print('\nInterrupted by human...')
-            sys.exit(0)
+     main()
