@@ -1,11 +1,9 @@
-
-
 #!/usr/bin/env python
 
-import pyAesCrypt
-import os
+from Crypto.Hash import SHA256
+from Crypto.Cipher import AES
+import os, random, sys
 import getpass
-import sys
 import argparse
 
 
@@ -18,6 +16,9 @@ def checkArguments(inputFile, newFile):
     except Exception as error:
         print('ERROR', error)
 
+def getKey(password):
+        hasher = SHA256.new(password.encode())
+        return hasher.digest()
 
 """Takes file names and checks if they can be used correctly """
 def checkFile(fileName, bol):
@@ -39,6 +40,38 @@ def passArguments(crypt):
     password = checkArguments(inputFile, outputFile)
     return inputFile, outputFile, password
 
+def encrypt(key, filetoEncrypt, outputFile, bufferSize):
+    filesize = str(os.path.getsize(filetoEncrypt)).zfill(16)
+    IV = os.urandom(16)
+
+    encryptor = AES.new(key, AES.MODE_CBC, IV)
+
+    with open(filetoEncrypt, "rb") as infile:
+        with open(outputFile, "wb") as outfile:
+            outfile.write(filesize.encode())
+            outfile.write(IV)
+            while True:
+                chunk = infile.read(bufferSize)
+
+                if len(chunk) == 0:
+                    break
+                elif len(chunk) % 16 != 0:
+                    chunk += str.encode(" "*(16-(len(chunk) % 16)))
+                outfile.write(encryptor.encrypt(chunk))
+
+def decrypt(key, filetoDecrypt, outputFile, bufferSize):
+    with open(filetoDecrypt, "rb") as infile:
+        filesize = int(infile.read(16))
+        IV = infile.read(16)
+
+        decryptor = AES.new(key, AES.MODE_CBC, IV)
+        with open(outputFile, "wb") as outfile:
+            while True:
+                chunk = infile.read(bufferSize)
+                if len(chunk) == 0:
+                    break
+                outfile.write(decryptor.decrypt(chunk))
+            outfile.truncate(filesize)
 
 def main():
 # Parse arguments
@@ -52,15 +85,18 @@ def main():
         sys.exit(0)
     # encryption/decryption buffer size - 64K
     bufferSize = 64 * 1024
+    # make initialization vector
     try:
         if args.encrypt:
             fileToEncrypt, outputFile, password = passArguments(args.encrypt)
+            key = getKey(password)
             # encrypt
-            pyAesCrypt.encryptFile(fileToEncrypt, outputFile, password, bufferSize)
+            encrypt(key, fileToEncrypt, outputFile, bufferSize)
         if args.decrypt:
             fileToDecrypt, outputFile, password = passArguments(args.decrypt)
+            key = getKey(password)
             # decrypt
-            pyAesCrypt.decryptFile(fileToDecrypt, outputFile, password, bufferSize)
+            decrypt(key, fileToDecrypt, outputFile, bufferSize)
     except ValueError as error:
         print(error)
         sys.exit(0)
